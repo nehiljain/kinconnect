@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { search } from './net'
 
-export default function ProfileEditor({ profile, onSearchResults }) {
+export default function ProfileEditor({ profile = {}, onSearchResults }) {
     const [ spinner, setSpinner ] = useState(false);
     const [ editedProfile, setEditedProfile ] = useState();
 
@@ -24,7 +24,10 @@ export default function ProfileEditor({ profile, onSearchResults }) {
     past_projects: List[ProjectEntry] = Field(..., title="Projects they have worked on")
     elevator_pitch: str = Field(..., title="Elevator pitch for the person fpr the event")
 */
-
+    const onFieldUpdate = (delta) => {
+        const updated = {...editedProfile,...delta};
+        setEditedProfile(updated);
+    }
 
     const onSearch = async () => {
         if( spinner )
@@ -43,6 +46,25 @@ export default function ProfileEditor({ profile, onSearchResults }) {
     return (
         <div>
             <h2>Profile Editor</h2>
+
+            <input
+                type="text"
+                placeholder="name"
+                value={editedProfile.name}
+                onChange={(event)=>{
+                    onFieldUpdate({name:event.target.value})
+                }}
+            />
+
+            <input
+                type="text"
+                placeholder="honors"
+                value={editedProfile.honors || ''}
+                onChange={(event)=>{
+                    onFieldUpdate({honors:event.target.value})
+                }}
+            />
+
             <button onClick={onSearch}>Search</button>
         </div>
     )

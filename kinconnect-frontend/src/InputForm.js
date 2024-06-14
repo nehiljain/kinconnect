@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function SummaryEditor({ onProfile }) {
+export default function InputForm({ onProfile }) {
     // Define state variables for the input fields
     const [input1, setInput1] = useState('');
     const [input2, setInput2] = useState('');
