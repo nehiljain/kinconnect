@@ -2,29 +2,28 @@ import React, { useState } from 'react';
 
 import SummaryEditor from './SummaryEditor'
 import MatchResults from './MatchResults'
-
+import InputForm from './InputForm'
 
 import logo from "./logo.svg";
 import "./App.css";
 
 function App() {
-  // Define state variables for the input fields
-  const [input1, setInput1] = useState('');
-  const [input2, setInput2] = useState('');
-  const [input3, setInput3] = useState('');
+  const [ summaryData, setSummaryData ] = useState(undefined);
+  const [ matchResults, setMatchResults ] = useState(undefined);
 
-  // Handle input changes
-  const handleInput1Change = (event) => setInput1(event.target.value);
-  const handleInput2Change = (event) => setInput2(event.target.value);
-  const handleInput3Change = (event) => setInput3(event.target.value);
+  const onSummarizeForm = () => {
+
+  }
 
   // Handle button click
-  const handleNextClick = () => {
-    console.log('Input 1:', input1);
-    console.log('Input 2:', input2);
-    console.log('Input 3:', input3);
-    // Add your logic for the next button click here
+  const onFormButtonPress = () => {
   };
+
+  const onSearchButtonPress = () => {
+  }
+
+  const hasSummaryData = summaryData ? true : false;
+  const hasMatchResults = matchResults ? true : false;
 
   return (
     <div className="App">
@@ -44,32 +43,14 @@ function App() {
       </header>
       <main className="App-main">
         <p>Connecting families with technology.</p>
-        <div className="input-container">
-          <input
-            type="text"
-            placeholder="Input 1"
-            value={input1}
-            onChange={handleInput1Change}
-          />
-          <input
-            type="text"
-            placeholder="Input 2"
-            value={input2}
-            onChange={handleInput2Change}
-          />
-          <input
-            type="text"
-            placeholder="Input 3"
-            value={input3}
-            onChange={handleInput3Change}
-          />
-          <button onClick={handleNextClick}>Next</button>
-        </div>
+        <InputForm onSummaryData={setSummaryData} />
       </main>
 
-      <SummaryEditor />
-      <MatchResults />
-
+      { hasSummaryData && <SummaryEditor
+        summaryData={summaryData}
+        onMatchResults={setMatchResults}
+      /> }
+      { hasMatchResults && <MatchResults /> }
 
       <footer className="App-footer">
         <p>&copy; 2024 Kin Connect.ai. All rights reserved.</p>

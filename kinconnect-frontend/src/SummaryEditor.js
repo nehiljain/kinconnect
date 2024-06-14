@@ -1,12 +1,14 @@
 
+export default function SummaryEditor({ summaryData, onMatchResults }) {
 
+	const onSearch = () => {
+		onMatchResults({ matches: [] });
+	}
 
-
-
-
-export default function SummaryEditor({}) {
-
-
-
-	return <div>Summary Editor</div>
+	return (
+		<div>
+			<h2>Search</h2>
+        	<button onClick={onSearch}>Search</button>
+		</div>
+	)
 }
