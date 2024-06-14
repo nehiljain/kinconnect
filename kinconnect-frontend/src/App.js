@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+
+import SummaryEditor from './SummaryEditor'
+import MatchResults from './MatchResults'
+
+
 import logo from "./logo.svg";
 import "./App.css";
 
@@ -61,6 +66,11 @@ function App() {
           <button onClick={handleNextClick}>Next</button>
         </div>
       </main>
+
+      <SummaryEditor />
+      <MatchResults />
+
+
       <footer className="App-footer">
         <p>&copy; 2024 Kin Connect.ai. All rights reserved.</p>
       </footer>
