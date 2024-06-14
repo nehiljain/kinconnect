@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function SummaryEditor({ onSummaryData }) {
+export default function SummaryEditor({ onProfile }) {
     // Define state variables for the input fields
     const [input1, setInput1] = useState('');
     const [input2, setInput2] = useState('');
@@ -12,7 +12,7 @@ export default function SummaryEditor({ onSummaryData }) {
     const handleInput3Change = (event) => setInput3(event.target.value);
 
     const handleNextClick = () => {
-        onSummaryData({hello:true});
+        onProfile({hello:true});
     }
 
     return (

@@ -1,29 +1,40 @@
 import React, { useState } from 'react';
 
-import SummaryEditor from './SummaryEditor'
-import MatchResults from './MatchResults'
+import ProfileEditor from './ProfileEditor'
+import SearchResults from './SearchResults'
 import InputForm from './InputForm'
 
 import logo from "./logo.svg";
 import "./App.css";
 
+/*
+  inputFields: [string,string,]
+  
+  profile: ProfileModel <= our summary fields
+
+  searchResults: [{.  <== search results
+     score: number,
+     profile: ProfileModel,
+  },...]
+
+class ProfileModel:
+    name: str = Field(..., title="Name of the person")
+    honors: str = Field(None, title="Honors, Awards and recognition they have recieved in life")
+    interests: str = Field(..., title="Interests and current focus of theirs the work or the event")
+    skills: str = Field(..., title="Skills they have")
+    career: List[CareerEntry] = Field(..., title="Career history of the person")
+    past_projects: List[ProjectEntry] = Field(..., title="Projects they have worked on")
+    elevator_pitch: str = Field(..., title="Elevator pitch for the person fpr the event")
+
+*/
+
+
 function App() {
-  const [ summaryData, setSummaryData ] = useState(undefined);
-  const [ matchResults, setMatchResults ] = useState(undefined);
+  const [ profile, setProfile ] = useState(undefined);
+  const [ searchResults, setSearchResults ] = useState(undefined);
 
-  const onSummarizeForm = () => {
-
-  }
-
-  // Handle button click
-  const onFormButtonPress = () => {
-  };
-
-  const onSearchButtonPress = () => {
-  }
-
-  const hasSummaryData = summaryData ? true : false;
-  const hasMatchResults = matchResults ? true : false;
+  const hasProfile = profile ? true : false;
+  const hasSearchResults = searchResults ? true : false;
 
   return (
     <div className="App">
@@ -43,14 +54,14 @@ function App() {
       </header>
       <main className="App-main">
         <p>Connecting families with technology.</p>
-        <InputForm onSummaryData={setSummaryData} />
+        <InputForm onProfile={setProfile} />
       </main>
 
-      { hasSummaryData && <SummaryEditor
-        summaryData={summaryData}
-        onMatchResults={setMatchResults}
+      { hasProfile && <ProfileEditor
+        profile={profile}
+        onSearchResults={setSearchResults}
       /> }
-      { hasMatchResults && <MatchResults /> }
+      { hasSearchResults && <SearchResults /> }
 
       <footer className="App-footer">
         <p>&copy; 2024 Kin Connect.ai. All rights reserved.</p>
