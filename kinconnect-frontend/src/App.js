@@ -63,6 +63,8 @@ function App() {
       /> }
       { hasSearchResults && <SearchResults /> }
 
+      <div style={{height:200}}>Hello</div>
+
       <footer className="App-footer">
         <p>&copy; 2024 Kin Connect.ai. All rights reserved.</p>
       </footer>

@@ -27,7 +27,7 @@ export default function InputForm({ onProfile }) {
                 { question: 'What is your strongest functional role (such as developer, UX, business, product)? Please share one or two things about your experience in this role, for example a success, companies you worked for, how many years.', answer: input3 },
                 { question: 'Are you interested in meeting people with a specific skill set (either one that you lack or one that you already have but want to clone yourself to speed up building). What is the skills sets that you are looking to meet?', answer: input4 },
             ];
-            const { profile } = await createProfile( qa_pairs );
+            const profile = await createProfile( qa_pairs );
             onProfile( profile );
         } catch(err) {
             alert('Create Profile error: ' + err);

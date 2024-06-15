@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Select from 'react-select';
-import Creatable from 'react-select/creatable';
+import CreatableSelect from 'react-select/creatable';
 
 import { updateProfile, search } from "./net";
 
@@ -30,6 +30,7 @@ export default function ProfileEditor({ profile = {}, onSearchResults }) {
 */
     const onFieldUpdate = (delta) => {
         const updated = { ...editedProfile, ...delta };
+        console.log('onFieldUpdate',delta,updated);
         setEditedProfile(updated);
     };
 
@@ -52,6 +53,7 @@ export default function ProfileEditor({ profile = {}, onSearchResults }) {
         <div>
             <h2>Profile Editor</h2>
 
+            <div>Name:</div>
             <div>
                 <input
                     type="text"
@@ -62,88 +64,81 @@ export default function ProfileEditor({ profile = {}, onSearchResults }) {
                     }}
                 />
             </div>
-
+            <div>Elevator pitch:</div>
             <div>
                 <input
                     type="text"
-                    placeholder="honors"
-                    value={editedProfile?.honors || ""}
+                    placeholder="elevator pitch"
+                    value={editedProfile?.elevator_pitch || ""}
                     onChange={(event) => {
-                        onFieldUpdate({ honors: event.target.value });
+                        onFieldUpdate({ elevator_pitch: event.target.value });
+                    }}
+                />
+            </div>
+            <div>Career:</div>
+            <div>
+                <input
+                    type="text"
+                    placeholder="career"
+                    value={editedProfile?.career || ""}
+                    onChange={(event) => {
+                        onFieldUpdate({ career: event.target.value });
                     }}
                 />
             </div>
 
-            <EditList items={editedProfile?.skills} onUpdate={()=>{}} />
+            <div>Honors:</div>
+            <EditList items={editedProfile?.honors} onUpdate={(honors)=>onFieldUpdate({honors})} />
 
-      <button onClick={onSearch}>Search</button>
-    </div>
+            <div>Interests:</div>
+            <EditList items={editedProfile?.interests} onUpdate={(interests)=>onFieldUpdate({interests})} />
+
+            <div>Skills:</div>
+            <EditList items={editedProfile?.skills} onUpdate={(skills)=>onFieldUpdate({skills})} />
+
+            <div>Past projects:</div>
+            <EditList items={editedProfile?.past_projects} onUpdate={(past_projects)=>onFieldUpdate({past_projects})} />
+
+            <button onClick={onSearch}>Search</button>
+        </div>
   );
 }
 
-function EditList({ items = [], onUpdate }) {
-    const [ newItem, setNewItem ] = useState('');
+/*
+            name: 'Mike',
+            honors: ['Phd in Biology'],
+            interests: ['Pickle','ball'],
+            skills: ['React','Mongo'],
+            career: 'Nuclear Physicist', // List[CareerEntry] = Field(..., title="Career history of the person")
+            past_projects: ['Dispersed camping'], // List[ProjectEntry] = Field(..., title="Projects they have worked on")
+            elevator_pitch: "I'm building a rocket and flying to mars"
 
+*/
+
+
+function EditList({ items = [], onUpdate }) {
     const options = items.map(e=>({value:e,label:e}));
 
-    const setSelectedOption = () => {
+    const setSelectedOption = (e) => {
+        console.log('setSelectedOption',e);
     }
 
-    const handleAddItem = () => {
+    const onCreateOption = (newItem) => {
+        console.log('onCreateOption',newItem);
         if (newItem && !items.includes(newItem)) {
             const updatedItems = [...items, newItem];
             onUpdate(updatedItems);
-            setNewItem('');
         }
     };
-
-    const handleKeyPress = (event) => {
-        if (event.key === 'Enter') {
-            handleAddItem();
-        }
-    };
-
-    // defaultValue={selectedOption}
 
     return (
         <div>
-            <Select
+            <CreatableSelect
                 isMulti
                 onChange={setSelectedOption}
                 options={options}
-            />
-            <br/>
-            <input
-                type="text"
-                placeholder=""
-                value={newItem}
-                onChange={(event) => {
-                    setNewItem( event.target.value );
-                }}
-                onKeyPress={handleKeyPress}
+                onCreateOption={onCreateOption}
             />
         </div>
     )
 }
-
-/*
-const options = [
-  { value: 'chocolate', label: 'Chocolate' },
-  { value: 'strawberry', label: 'Strawberry' },
-  { value: 'vanilla', label: 'Vanilla' },
-];
-
-
-export default function App() {
-  const [selectedOption, setSelectedOption] = useState(null);
-
-  return (
-    <div className="App">
-      <Select
-        defaultValue={selectedOption}
-        onChange={setSelectedOption}
-        options={options}
-      />
-    </div>
-  );
-}*/
