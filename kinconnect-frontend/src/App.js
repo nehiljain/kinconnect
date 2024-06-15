@@ -61,7 +61,7 @@ function App() {
         profile={profile}
         onSearchResults={setSearchResults}
       /> }
-      { hasSearchResults && <SearchResults /> }
+      { hasSearchResults && <SearchResults searchResults={searchResults} /> }
 
       <div style={{height:200}}>Hello</div>
 

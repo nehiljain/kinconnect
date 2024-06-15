@@ -33,9 +33,7 @@ export async function search() {
     const config = createAuthConfig();
     //const { data } = await axios.get( BASE_URL + '/search', config );
 
-    const data = {
-        searchResults: [ searchRow(), searchRow(), searchRow() ]
-    }
+    const data = [ searchRow(), searchRow(), searchRow() ]
     console.log( 'search', data );
     return data;
 }
