@@ -4,13 +4,13 @@ function createAuthConfig() {
 	return {};
 }
 
-const BASE_URL = "https://.."
+const BASE_URL = "https://0c5f-12-38-208-106.ngrok-free.app";
 
-export async function createProfile( inputFields ) {
-    console.log( 'createProfile', inputFields );
+export async function createProfile( qa_pairs ) {
+    console.log( 'createProfile', JSON.stringify(qa_pairs) );
     const config = createAuthConfig();
-    //const { data } = await axios.post( BASE_URL + '/profile', { inputFields }, config );
-    const data = { profile: {
+    const { data } = await axios.post( BASE_URL + '/profiles/', { qa_pairs }, config );
+    /*const data = { profile: {
         name: 'Mike',
         honors: ['Phd in Biology'],
         interests: ['Pickle ball'],
@@ -18,7 +18,7 @@ export async function createProfile( inputFields ) {
         career: 'Nuclear Physicist', // List[CareerEntry] = Field(..., title="Career history of the person")
         past_projects: ['Dispersed camping'], // List[ProjectEntry] = Field(..., title="Projects they have worked on")
         elevator_pitch: "I'm building a rocket and flying to mars"
-    }};
+    }};*/
     console.log( 'createProfile data', data );
     return data;
 }
