@@ -21,8 +21,35 @@ export async function createProfile( inputFields ) {
     return data;
 }
 
+/*
+  searchResults: [{.  <== search results
+     score: number,
+     profile: ProfileModel,
+  },...]
+*/
+
+let exampleCount = 1;
+function searchRow() {
+    return {
+        score: 85,
+        profile: {
+            name: 'Mike',
+            honors: 'Phd in Biology',
+            interests: 'Pickle ball',
+            skills: 'React, Mongo',
+            career: 'Nuclear Physicist', // List[CareerEntry] = Field(..., title="Career history of the person")
+            past_projects: 'Dispersed camping', // List[ProjectEntry] = Field(..., title="Projects they have worked on")
+            elevator_pitch: "I'm building a rocket and flying to mars"
+        }
+    }
+}
+
 export async function search( profile ) {
     const config = createAuthConfig();
-    const { data } = await axios.post( BASE_URL + '/search', { profile }, config );
+    //const { data } = await axios.post( BASE_URL + '/search', { profile }, config );
+
+    const data = {
+        searchResults: [ searchRow(), searchRow(), searchRow() ]
+    }
     return data;
 }

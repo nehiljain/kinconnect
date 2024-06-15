@@ -50,7 +50,7 @@ export default function ProfileEditor({ profile = {}, onSearchResults }) {
       <input
         type="text"
         placeholder="name"
-        value={editedProfile.name || ""}
+        value={editedProfile?.name || ""}
         onChange={(event) => {
           onFieldUpdate({ name: event.target.value });
         }}
@@ -59,7 +59,7 @@ export default function ProfileEditor({ profile = {}, onSearchResults }) {
       <input
         type="text"
         placeholder="honors"
-        value={editedProfile.honors || ""}
+        value={editedProfile?.honors || ""}
         onChange={(event) => {
           onFieldUpdate({ honors: event.target.value });
         }}
