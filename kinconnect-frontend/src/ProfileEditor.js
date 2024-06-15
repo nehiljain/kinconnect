@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { search } from "./net";
+import { updateProfile, search } from "./net";
 
 export default function ProfileEditor({ profile = {}, onSearchResults }) {
   const [spinner, setSpinner] = useState(false);
@@ -35,10 +35,11 @@ export default function ProfileEditor({ profile = {}, onSearchResults }) {
 
     setSpinner(true);
     try {
-      const searchResults = await search({ profile: editedProfile });
+      await updateProfile( editedProfile ) 
+      const searchResults = await search();
       onSearchResults(searchResults);
     } catch (err) {
-      console.log("onSearch error", err);
+      alert("Search error " + err);
     }
     setSpinner(false);
   };
