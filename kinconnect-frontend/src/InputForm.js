@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import Spinner from './Spinner'
+import { createProfile } from './net'
 
 export default function InputForm({ onProfile }) {
-    // Define state variables for the input fields
+    const [ spinner, setSpinner ] = useState(false);
     const [input1, setInput1] = useState('');
     const [input2, setInput2] = useState('');
     const [input3, setInput3] = useState('');
@@ -11,8 +13,19 @@ export default function InputForm({ onProfile }) {
     const handleInput2Change = (event) => setInput2(event.target.value);
     const handleInput3Change = (event) => setInput3(event.target.value);
 
-    const handleNextClick = () => {
-        onProfile({hello:true});
+    const handleNextClick = async () => {
+        if( spinner )
+            return;
+
+        setSpinner(true);
+        try {
+            const inputFields = [input1,input2,input3];
+            const { profile } = await createProfile( inputFields );
+            onProfile( profile );
+        } catch(err) {
+            alert('Create Profile error: ' + err);
+        }
+        setSpinner(false);
     }
 
     return (
@@ -36,6 +49,7 @@ export default function InputForm({ onProfile }) {
             onChange={handleInput3Change}
           />
           <button onClick={handleNextClick}>Next</button>
+          <Spinner visible={spinner} />
         </div>
     )
 }
