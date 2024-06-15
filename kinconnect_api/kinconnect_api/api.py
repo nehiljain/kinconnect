@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
-from pymongo import MongoClient
+from kinconnect_api.search.search import Search
+import kinconnect_api.util.collections
 
 app = FastAPI()
 
@@ -54,3 +55,19 @@ def update_profile(name: str, profile: ProfileModel):
     if updated_profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")
     return ProfileModel(**updated_profile)
+
+@app.put("/search", response_model=ProfileModel)
+def search(name: str, profiles: list[ProfileModel]):
+    profile = db.profiles.find_one(
+        {"name": name},
+        return_document=True
+    )
+    profile = ProfileModel(**profile)
+    simplified_profile = ProfileModel()
+    simplified_profile.elevator_pitch = profile.elevator_pitch
+    simplified_profile.interests = profile.interests
+    query =kinconnect_api.util.collections.get_profile_doc(profile)
+
+    handler = Search()
+    profiles = handler.perform_similarity_search(query)
+    return profiles

@@ -11,7 +11,8 @@ class Search:
     def __init__(self):
         load_dotenv()
         self.table = "kinconnect"
-        self.collection = "profiles"
+        # self.collection = "profiles"
+        self.collection = "demo_profiles"
 
     def create_vector_search(self):
         """
