@@ -11,6 +11,8 @@ import pandas as pd
 import pandas as pd
 from typing import List, Dict, Callable, Union
 from fastapi.middleware.cors import CORSMiddleware
+from kinconnect_api.search.search import Search
+import kinconnect_api.util.collections
 
 load_dotenv()
 app = FastAPI()
@@ -126,6 +128,23 @@ def perform_similarity_search(query, top_k=3):
         query=query,
         k=top_k,
     )
+    if updated_profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return ProfileModel(**updated_profile)
 
-    return results
+@app.put("/search", response_model=ProfileModel)
+def search(name: str, profiles: list[ProfileModel]):
+    profile = db.profiles.find_one(
+        {"name": name},
+        return_document=True
+    )
+    profile = ProfileModel(**profile)
+    simplified_profile = ProfileModel()
+    simplified_profile.elevator_pitch = profile.elevator_pitch
+    simplified_profile.interests = profile.interests
+    query =kinconnect_api.util.collections.get_profile_doc(profile)
+
+    handler = Search()
+    profiles = handler.perform_similarity_search(query)
+    return profiles
 
