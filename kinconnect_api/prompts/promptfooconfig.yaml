@@ -1,0 +1,33 @@
+# Learn more about building a configuration: https://promptfoo.dev/docs/configuration/guide
+description: 'Carrer Extraction Eval'
+
+prompts:
+  - file://prompt_extract_portfolio.txt
+  # - file://prompt_extract_career.txt
+  # - file://prompt_extract_career_firefunc.txt
+  
+
+providers:
+  # - id: 'python:promptfoo_call_fireworks_api.py'
+  #   label: 'Test Fireworks Mistral-7B'
+  #   config:
+  #     model: "accounts/fireworks/models/mistral-7b-instruct-v3"
+
+  # - id: 'python:promptfoo_call_fireworks_api.py'
+  #   label: 'Test Fireworks Fire Function-V2'
+  #   config:
+  #     model: "accounts/fireworks/models/firefunction-v2"
+
+  # - id: 'python:promptfoo_call_fireworks_api_portofio.py'
+  #   label: 'Test Fireworks Portfolio Mistral-7B'
+  #   config:
+  #     model: "accounts/fireworks/models/mistral-7b-instruct-v3"
+
+  - id: 'python:promptfoo_call_fireworks_api_profile_attributes.py'
+    label: 'Test Fireworks Profile Attributes Mistral-7B'
+    config:
+      model: "accounts/fireworks/models/mistral-7b-instruct-v3"
+
+tests: /Users/nehiljain/code/kinconnect/kinconnect_api/data/raw/formatted_profiles.csv
+
+

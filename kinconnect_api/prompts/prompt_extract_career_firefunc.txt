@@ -1,0 +1,5 @@
+Use the questions answered by participants of a hackathon to call the function with the right arguments.
+Find the relevant career related information in the bio to call the function successfully. 
+
+# BIO
+{{bio}}
