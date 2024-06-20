@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from langchain_mongodb import MongoDBAtlasVectorSearch
+from langchain_fireworks import FireworksEmbeddings
 from typing import List
 from pymongo import MongoClient
 from langchain_fireworks import ChatFireworks
@@ -9,7 +10,6 @@ from kinconnect_api.features import get_full_profile
 import pandas as pd
 import pandas as pd
 from typing import List, Dict, Callable, Union
-import os
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -76,32 +76,56 @@ def create_profile(form_submission: List[QAPair]):
     return profile
 
 
-
-# # @app.get("/profiles/{name}", response_model=ProfileModel)
-# # def read_profile(name: str):
-# #     profile = profiles_collection.find_one({"name": name})
-# #     if profile is None:
-# #         raise HTTPException(status_code=404, detail="Profile not found")
-# #     return ProfileModel(**profile)
-
 @app.put("/profiles/", response_model=ProfileModel)
 def update_profile(profile: ProfileModel):
-    updated_profile = profiles_collection.find_one_and_update(
-        {"name": profile.name},
-        {"$set": profile.model_dump()},
-        return_document=True
+    # Define the filter and update
+    new_values = {"$set": profile.model_dump()}
+
+    # Update the document
+    result = profiles_collection.update_one({"name": profile.name}, new_values)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
+
+
+
+@app.get("/search/", response_model=List[ProfileModel])
+def search(profile: ProfileModel):
+    profiles = perform_similarity_search(profile.elevator_pitch)
+    return profiles
+
+def create_vector_search():
+        """
+        Creates a MongoDBAtlasVectorSearch object using the connection string, database, and collection names, along with the OpenAI embeddings and index configuration.
+
+        :return: MongoDBAtlasVectorSearch object
+        """
+        vector_search = MongoDBAtlasVectorSearch.from_connection_string(
+            MONGO_CONNECTION_STRING,
+            "kinconnect.demo_profiles",
+            FireworksEmbeddings(model="nomic-ai/nomic-embed-text-v1.5"),
+            index_name="default"
+        )
+        return vector_search
+
+
+def perform_similarity_search(query, top_k=3):
+    """
+    This function performs a similarity search within a MongoDB Atlas collection. It leverages the capabilities of the MongoDB Atlas Search, which under the hood, may use the `$vectorSearch` operator, to find and return the top `k` documents that match the provided query semantically.
+
+    :param query: The search query string.
+    :param top_k: Number of top matches to return.
+    :return: A list of the top `k` matching documents with their similarity scores.
+    """
+
+    # Get the MongoDBAtlasVectorSearch object
+    vector_search = create_vector_search()
+
+    # Execute the similarity search with the given query
+    results = vector_search.similarity_search_with_score(
+        query=query,
+        k=top_k,
     )
-    print(f"updated_profile: {updated_profile}")
-    # if updated_profile is None:
-    #     raise HTTPException(status_code=404, detail="Profile not found")
-    return ProfileModel(**updated_profile)
 
-
-# # if __name__ == "__main__":
-# #     app.deploy("api")
-
-# # from fastapi import FastAPI
-
-# # app = FastAPI()
-
+    return results
 
