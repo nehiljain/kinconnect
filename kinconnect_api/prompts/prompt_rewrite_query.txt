@@ -1,0 +1,6 @@
+I have a query to match with a database of engineers, designers, project managers etc. Each profile in database includes their skills, projects, career history, and interests. 
+The goal is to expand this query to ensure it captures all relevant aspects and nuances needed for accurate matching. Here is the query:
+
+"{{context}}"
+
+Please expand this query to include additional relevant details, such as specific skills, roles, project types, and any other contextual information that would improve the accuracy of matching with the profiles in the database. Consider what someone might need in a hackathon context, including complementary skills, leadership qualities, and relevant experience.
