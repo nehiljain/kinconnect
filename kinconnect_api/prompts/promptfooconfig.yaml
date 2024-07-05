@@ -1,10 +1,11 @@
 # Learn more about building a configuration: https://promptfoo.dev/docs/configuration/guide
-description: 'Carrer Extraction Eval'
+description: 'Query Rewriter Eval'
 
 prompts:
-  - file://prompt_extract_portfolio.txt
+  # - file://prompt_extract_portfolio.txt
   # - file://prompt_extract_career.txt
   # - file://prompt_extract_career_firefunc.txt
+  - file:///Users/nehiljain/code/kinconnect/kinconnect_api/prompts/prompt_rewrite_query.txt
   
 
 providers:
@@ -23,11 +24,15 @@ providers:
   #   config:
   #     model: "accounts/fireworks/models/mistral-7b-instruct-v3"
 
-  - id: 'python:promptfoo_call_fireworks_api_profile_attributes.py'
-    label: 'Test Fireworks Profile Attributes Mistral-7B'
+  # - id: 'python:promptfoo_call_fireworks_api_profile_attributes.py'
+  #   label: 'Test Fireworks Profile Attributes Mistral-7B'
+  #   config:
+  #     model: "accounts/fireworks/models/mistral-7b-instruct-v3"
+  - id: 'python:promptfoo_call_fireworks_api_query_rewriter.py'
+    label: 'Test Fireworks Query Rewriter Mistral-7B'
     config:
       model: "accounts/fireworks/models/mistral-7b-instruct-v3"
-
-tests: /Users/nehiljain/code/kinconnect/kinconnect_api/data/raw/formatted_profiles.csv
+# tests: /Users/nehiljain/code/kinconnect/kinconnect_api/data/raw/formatted_profiles.csv
+tests: /Users/nehiljain/code/kinconnect/kinconnect_api/prompts/test_rewrite_contexts.csv
 
 

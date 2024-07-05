@@ -1,5 +1,8 @@
 Use the questions answered by participants of a hackathon to call the function with the right arguments.
-Find the relevant career related information in the bio to call the function successfully. 
+Find the relevant career related information in the bio to create career history. Make sure you capture all the companies and dates in order.
+This information is very important so missing any career event will be expensive mistake.
+
+If date is not mentioned or it says present/current, then the end date should be current date which is in timestamp.
 
 # BIO
 {{bio}}
