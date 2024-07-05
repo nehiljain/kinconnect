@@ -10,7 +10,7 @@ from kinconnect_api.config import MONGO_CONNECTION_STRING, PROCESSED_DATA_DIR, l
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_mongo_client() -> MongoClient:
     """Get a MongoDB client."""
@@ -48,6 +48,8 @@ def insert_new_profiles(profiles: List[Dict], collection) -> List[Dict]:
     if new_profiles:
         collection.insert_many(new_profiles)
         logging.info(f"Inserted {len(new_profiles)} new profiles")
+    else:
+        logging.info(f"No new profiles to insert")
     return new_profiles
 
 def get_vector_store() -> MongoDBAtlasVectorSearch:
