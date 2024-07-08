@@ -60,6 +60,125 @@ def get_vector_store() -> MongoDBAtlasVectorSearch:
         index_name = "profile_chunks"
     )
 
+def hybrid_search_profiles_with_score(
+    keywords_query: str,
+    vector_query: str,
+    k: int = 4,
+):
+    vector_penalty = 15
+    full_text_penalty = 10
+    embedding = get_vector_store()._embedding.embed_query(vector_query)
+    # Inspired by https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/reciprocal-rank-fusion/
+    pipeline = [
+        {
+            "$vectorSearch": {
+                "queryVector": embedding,
+                "path": "embedding",
+                "numCandidates": k * 10,
+                "limit": k,
+                "index": "profile_chunks",
+            }
+        },
+        {"$group": {"_id": None, "docs": {"$push": "$$ROOT"}}},
+        {
+            "$unwind": {
+                "path": "$docs", 
+                "includeArrayIndex": "rank"
+            }
+        },
+        {
+            "$addFields": {
+                "vs_score": {
+                    "$divide": [1.0, {"$add": ["$rank", vector_penalty, 1]}]
+                }
+            }
+        },
+        {
+            "$project": {
+                "vs_score": 1, 
+                "_id": "$docs._id", 
+                "name": "$docs.name"
+            }
+        },
+        {
+            "$unionWith": {
+                "coll": "profile_chunks",
+                "pipeline": [
+                    {
+                        "$search": {
+                            "index": "default",
+                            "phrase": {
+                                "query": keywords_query,
+                                "path": "text"
+                            }
+                        }
+                    },
+                    {
+                        '$match': {
+                            'question': {
+                                '$not': {
+                                    '$regex': 'are you interested', 
+                                    '$options': 'i'
+                                }
+                            }
+                        }
+                    },
+                    {"$limit": 20},
+                    {"$group": {"_id": None, "docs": {"$push": "$$ROOT"}}},
+                    {"$unwind": {"path": "$docs", "includeArrayIndex": "rank"}},
+                    {"$addFields": {"fts_score": {"$divide": [1.0, {"$add": ["$rank", full_text_penalty, 1]}]}}},
+                    {"$project": {"fts_score": 1, "_id": "$docs._id", "name": "$docs.name"}}
+                ]
+            }
+        },
+        {
+            "$group": {
+                "_id": "$name",
+                "vs_score": {"$max": "$vs_score"},
+                "fts_score": {"$max": "$fts_score"}
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "name": 1,
+                "vs_score": {"$ifNull": ["$vs_score", 0]},
+                "fts_score": {"$ifNull": ["$fts_score", 0]}
+            }
+        },
+        {
+            "$project": {
+                "score": {"$add": ["$fts_score", "$vs_score"]},
+                "_id": 1,
+                "name": 1,
+                "vs_score": 1,
+                "fts_score": 1
+            }
+        },
+        {"$sort": {"score": -1}},
+        {"$limit": 10},
+        {
+            "$lookup": {
+                "from": "profiles",
+                "localField": "_id",
+                "foreignField": "name",
+                "as": "profile"
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$profile",
+                "preserveNullAndEmptyArrays": True
+            }
+        }
+    ]
+
+    cursor = get_mongo_client()['kinconnect']['profile_chunks'].aggregate(pipeline)  # type: ignore[arg-type]
+    matched_profiles = [res for res in cursor]
+    
+    return matched_profiles
+
+
 def get_profile_by_name(name: str) -> Dict:
     client = get_mongo_client()
     db = client['kinconnect']

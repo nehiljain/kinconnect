@@ -1,20 +1,25 @@
 import re
 import logging
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 from kinconnect_api.config import load_dotenv, PROCESSED_DATA_DIR
 from langchain_core.messages import HumanMessage
-from langchain_fireworks import ChatFireworks
 from langchain_core.pydantic_v1 import BaseModel, Field
-from kinconnect_api.db import get_vector_store, get_mongo_client, get_profile_by_name
+from kinconnect_api.db import get_profile_by_name, hybrid_search_profiles_with_score
 from kinconnect_api.llm_utils import call_fireworks_api_no_structure, call_fireworks_api_with_structure, FIREFUNC_MODEL, MISTRAL_MODEL, LLAMA_70B_MODEL
-
+from enum import Enum
 import pandas as pd
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
+
+
+SOFT_OR_HARD_PROMPT = """You are a technical recruiter at google. Your job to is to screen skills of technical folks. Given a skill you repond 'Yes' if it is a hard skill and 'No' for soft skill. No yapping.
+
+SKILL: {context}
+"""
 
 QUERY_PROMPT: str = """I have a request to match with a database of engineers, designers, project managers etc. This request in the form of answers to two questions. 
 
@@ -29,6 +34,16 @@ Here is the request in question answer pairs:
 Please expand this request to include additional relevant details, such as specific skills, roles, project types, and any other contextual information that would improve the accuracy of matching with the profiles in the database. Consider what someone might need in a hackathon context, including complementary skills, leadership qualities, and relevant experience. This request will be used to do semantic search on the database. So the description and content of the request is very very crucial for accuracy.
 
 Respond in <expanded_request> xml tags. The request should have all the answers and details. No yapping. No other text."""
+
+KEYWORD_QUERY_PROMPT: str = """
+You are a NLP toolkit similar to spacy which is an advanced natural language processing toolkit. Specially for Named Entity Recognition.
+and especially name entity recognition.
+
+Extract all the important keywords which represent skills and technologies that are critical. Ignore all the hard skills and focus on the soft skills.
+
+# Query Context
+"{context}"
+"""
 
 REWRITE_SUMMARY_QUERY_OLD: str = '''
 Understand the request and rewrite it in a easy to understand manner. Make sure to capture all the details. Write in 2 paragraphs like a formal and professional tone. Describe technologies, skills and details in specific details.
@@ -67,6 +82,7 @@ def extract_answer_from_submission(question: str, form_submission: str) -> Optio
         logging.info("Question not found or no answer available.")
         return None
 
+
 def create_profile_matching_request(profile: Dict[str, Any]) -> Optional[str]:
     """
     Creates a profile matching request based on the given profile.
@@ -98,11 +114,40 @@ def create_profile_matching_request(profile: Dict[str, Any]) -> Optional[str]:
         Request: {project_idea['answer']}"""
     
     expanded_request: Optional[str] = generate_expanded_request(context)
+    
     if expanded_request is None:
         return None
 
     expanded_query_string: Optional[str] = summarize_expanded_request(expanded_request)
-    return expanded_query_string
+    keyword_request = generate_keyword_request(expanded_query_string)
+    return expanded_query_string, keyword_request
+
+
+def generate_keyword_request(context: str) -> Optional[str]:
+    """
+    Generates an expanded request using the given context.
+
+    Args:
+        context (str): The context to use for generating the expanded request.
+
+    Returns:
+        Optional[str]: The expanded request or None if an error occurred.
+    """
+    
+    class Skill(BaseModel):
+        name: str = Field(description="The name of the skill. For example: Web Development, UI, UX, Data Science, Data Engineering, DevOps")
+    class Technology(BaseModel):
+        name: str = Field(description="The name of the technology, tools, systems, platforms used by software engineers and application developers. For example: SQL, Python, React, Vue, OpenAI, Sendgrid")
+    class Keywords(BaseModel):
+        keywords: List[Union[Skill, Technology]] = Field(description="The list of skills or technologies in the context.")
+    keyword_search_prompt: str = KEYWORD_QUERY_PROMPT.format(context=context)
+    response: Dict[str, Optional[Any]] = call_fireworks_api_with_structure(keyword_search_prompt, Keywords, MISTRAL_MODEL)
+    
+    if response['error']:
+        logging.error("Failed to generate expanded request.")
+        return None
+    keywords = [skill['name'] for skill in response['output']['keywords']]
+    return ', '.join(keywords)
 
 def generate_expanded_request(context: str) -> Optional[str]:
     """
@@ -175,7 +220,7 @@ def get_match_summary_explanation(expanded_request: str, profile: Dict[str, Any]
     summary_response = call_fireworks_api_with_structure(structure_parse_prompt, SummaryExplanation, FIREFUNC_MODEL)
     return summary_response['output']['summary']
 
-def get_match_profiles(query_text: str) -> List[Dict[str, Any]]:
+def get_match_profiles(keywords_query: str, vector_query: str) -> List[Dict[str, Any]]:
     """
     Retrieves matching profiles based on the query text.
 
@@ -185,13 +230,14 @@ def get_match_profiles(query_text: str) -> List[Dict[str, Any]]:
     Returns:
         List[Dict[str, Any]]: A list of matching profiles.
     """
-    vector_store = get_vector_store()
-    documents_with_scores = vector_store.similarity_search_with_score(query_text, k=5)
-    profile_names = [doc.metadata['name'] for doc, score in documents_with_scores]
-    client = get_mongo_client()
-    profiles = list(client.kinconnect.profiles.find({'name': {'$in': profile_names}}))
-    return profiles
+    
+    matched_profiles = hybrid_search_profiles_with_score(keywords_query, vector_query)  
+    return [
+        doc['profile'] for doc in matched_profiles
+    ]
 
+    
+    
 def get_matches_for_profile_with_name(name: str) -> Optional[pd.DataFrame]:
     """
     Retrieves matching profiles for a given profile name.
@@ -206,14 +252,15 @@ def get_matches_for_profile_with_name(name: str) -> Optional[pd.DataFrame]:
     if not profile:
         logging.error(f"No profile found with name: {name}")
         return None
-    query_string = create_profile_matching_request(profile)
-    if not query_string:
+    vector_query_string, keywords_query = create_profile_matching_request(profile)
+
+    if not vector_query_string:
         logging.error("Failed to create profile matching request.")
         return None
-    profile_matches = get_match_profiles(query_string)
+    profile_matches = get_match_profiles(keywords_query=keywords_query, vector_query=vector_query_string)
     profile_matches = [match for match in profile_matches if match.get('name') != name]
     df = pd.DataFrame(profile_matches)
-    df['summary_explanation'] = df.apply(lambda row: get_match_summary_explanation(expanded_request=query_string, profile=row), axis=1)
+    df['summary_explanation'] = df.apply(lambda row: get_match_summary_explanation(expanded_request=vector_query_string, profile=row), axis=1)
     df = df[~df['summary_explanation'].str.contains('BAD MATCH', case=False, na=False)].drop(columns=['_id', 'form_submission'])
     return df
 
